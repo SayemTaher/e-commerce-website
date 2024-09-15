@@ -1,68 +1,77 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { Helmet } from "react-helmet-async";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
 import { IoEyeOutline, IoEyeOffOutline } from "react-icons/io5";
-import { useLocation, useNavigate } from "react-router-dom"; // 'react-router-dom' is used for client-side routing
-import UseAxiosPublic from "../../Axios/AxiosPublic/UseAxiosPublic";
+import { useLocation, useNavigate } from "react-router-dom";
+import { AuthContext } from "../../Provider/AuthProvider";
+// import AuthProvider from "../../Provider/AuthProvider";
+
+
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const axioPublic = UseAxiosPublic();
+  const { registerUser } = useContext(AuthContext);
   const location = useLocation();
   const navigate = useNavigate();
   const from = location.state?.from?.pathname || "/";
 
   const {
-    register,
+    register, 
     handleSubmit,
     reset,
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => {
-    const { firstName, lastName, email, password } = data;
-    const userInfo = {
-      firstName,
-      lastName,
-      email,
-      password,
-    };
-    console.log(userInfo);
+  const onSubmit = async (data) => {
+      console.log(data)
+      const firstName = data.firstName 
+      const lastName = data.lastName 
+      const email = data.email 
+      const password = data.password
 
-    axioPublic
-      .post("/register", userInfo)
-      .then((res) => {
-        if (res.data.success) {
-          reset();
-          toast.success("User registered successfully");
-          navigate('/login');
-        }
-      })
-      .catch((error) => {
-        toast.error(
-          error.response ? error.response.data.message : error.message
-        );
-      });
+    const userInfo = {
+      firstName,lastName,email,password
+    }
+
+    try {
+      const response = await registerUser(userInfo);
+      if (response.success) {
+        reset();
+        toast.success("User registered successfully");
+        navigate("/login");
+      }
+    } catch (error) {
+      toast.error(error.response ? error.response.data.message : error.message);
+    }
   };
 
   return (
     <div className="flex items-center justify-center">
-      {/* This is the form section */}
+      <Helmet>
+        <title>MyShop | Register</title>
+      </Helmet>
       <div>
         <form onSubmit={handleSubmit(onSubmit)}>
           <div>
             <input
               type="text"
+              name="firstName"
               placeholder="First name"
-              {...register("firstName", { required: "First name is required" })}
+              {...register("firstName", {
+                required: "First name is required",
+              })}
             />
             {errors.firstName && <span>{errors.firstName.message}</span>}
           </div>
           <div>
             <input
               type="text"
+              name="lastName"
               placeholder="Last name"
-              {...register("lastName", { required: "Last name is required" })}
+              {...register("lastName", {
+                required: "Last name is required",
+              })}
             />
             {errors.lastName && <span>{errors.lastName.message}</span>}
           </div>
@@ -98,8 +107,6 @@ const Register = () => {
           <button type="submit">Register</button>
         </form>
       </div>
-      {/* Other sections can be added here */}
-      <div></div>
     </div>
   );
 };
